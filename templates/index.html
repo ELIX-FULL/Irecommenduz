@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% from '_review_card.html' import render_review_card %}
+
+{% block title %}Лента отзывов{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="main-content">
+        {% if current_category %}
+        <h1 class="page-title" style="text-align: left; margin: 0 0 20px 0;">Отзывы в категории: {{
+            current_category.category_name }}</h1>
+        {% else %}
+        <h1 class="page-title" style="text-align: left; margin: 0 0 20px 0;">Лента отзывов</h1>
+        {% endif %}
+
+        <div class="reviews-list">
+            {% for review in reviews %}
+            {{ render_review_card(review, user_votes) }}
+            {% else %}
+            <div class="plate"><p>Отзывов пока нет.</p></div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <aside class="sidebar">
+        <div class="sidebar-widget">
+            <h3 class="widget-title">Популярные отзывы за 24 часа</h3>
+            <div class="popular-reviews-container">
+                {% for pop_review in popular_reviews %}
+                <div class="popular-review-item">
+                    <a href="{{ url_for('review_detail', review_id=pop_review.review_id) }}" class="popular-title">{{ pop_review.name }}</a>
+                    <div class="popular-meta">
+                        <div class="popular-author">
+                            <i class="fas fa-user"></i>
+                            <span>{{ pop_review.user.login }}</span>
+                        </div>
+                        <div class="popular-rating">
+                            {% for i in range(pop_review.rating) %}<i class="fas fa-star filled"></i>{% endfor %}{% for i in range(5 - pop_review.rating) %}<i class="fas fa-star"></i>{% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <p>Пока нет популярных отзывов.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </aside>
+
+</div>
+
+<script>
+    document.addEventListener('click', function (e) {
+        if (e.target.closest('.gallery-item')) {
+            e.preventDefault();
+            const imagePath = e.target.closest('.gallery-item').getAttribute('href');
+            basicLightbox.create(`<img src="${imagePath}">`).show();
+        }
+    });
+
+    document.addEventListener('click', async function (e) {
+        const voteBtn = e.target.closest('.vote-btn');
+        if (!voteBtn) return;
+
+        e.preventDefault();
+
+        try {
+            const response = await fetch(`/review/${voteBtn.dataset.reviewId}/vote`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({vote_type: parseInt(voteBtn.dataset.voteType)})
+            });
+
+            if (response.status === 401) {
+                window.location.href = "{{ url_for('login') }}";
+                return;
+            }
+
+            if (!response.ok) throw new Error('Server error');
+
+            window.location.reload();
+
+        } catch (error) {
+            console.error("Ошибка голосования:", error);
+        }
+    });
+
+    document.querySelectorAll('.js-delete-btn').forEach(button => {
+        button.addEventListener('click', function (e) {
+            e.preventDefault();
+            const form = this.closest('form');
+
+            basicLightbox.create(`
+                <div class="modal-confirm">
+                    <h2>Подтвердите действие</h2>
+                    <p>Вы уверены, что хотите удалить этот отзыв? Это действие необратимо.</p>
+                    <div class="modal-buttons">
+                        <button class="modal-btn cancel">Отмена</button>
+                        <button class="modal-btn confirm">Удалить</button>
+                    </div>
+                </div>
+            `, {
+                onShow: (instance) => {
+                    instance.element().querySelector('.cancel').onclick = instance.close;
+                    instance.element().querySelector('.confirm').onclick = () => {
+                        form.submit();
+                    };
+                }
+            }).show();
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block title %}Все категории{% endblock %}
+
+{% block content %}
+<div class="plate">
+    <h1 class="page-title">Каталог отзывов</h1>
+
+    <div class="categories-grid">
+        {% for category in categories %}
+        <a href="{{ url_for('reviews_by_category', category_id=category.category_id) }}" class="category-grid-item">
+            {{ category.category_name }}
+        </a>
+        {% else %}
+        <p>Категории еще не созданы.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

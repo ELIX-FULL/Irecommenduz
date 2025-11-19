@@ -1,0 +1,41 @@
+{% extends 'auth_base.html' %}
+{% block title %}Подтверждение кода{% endblock %}
+{% block content %}
+<div class="plate login-plate">
+    <h1 class="page-title">Введите код</h1>
+    <p style="text-align: center; color: #6c757d; margin-bottom: 20px;">Мы отправили 6-значный код на ваш email.</p>
+    <form method="post">
+        <div class="form-group">
+            <label for="code">Код подтверждения:</label>
+            <input type="text" id="code" name="code" required pattern="\d{6}" title="Введите 6 цифр">
+        </div>
+        <button type="submit" class="btn-submit" style="width: 100%;">Подтвердить</button>
+    </form>
+    <div style="text-align: center; margin-top: 20px;">
+        <a href="{{ url_for('forgot_password') }}" id="resend-link" class="disabled-link">Отправить повторно (<span
+                id="timer">60</span>)</a>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const timerEl = document.getElementById('timer');
+        const resendLink = document.getElementById('resend-link');
+        let timeLeft = 60;
+
+        resendLink.style.pointerEvents = 'none';
+        resendLink.style.opacity = '0.5';
+
+        const timerInterval = setInterval(() => {
+            timeLeft--;
+            timerEl.textContent = timeLeft;
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                resendLink.innerHTML = "Отправить повторно";
+                resendLink.style.pointerEvents = 'auto';
+                resendLink.style.opacity = '1';
+            }
+        }, 1000);
+    });
+</script>
+{% endblock %}

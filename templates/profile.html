@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+
+{% block title %}Редактирование профиля{% endblock %}
+
+{% block content %}
+<div class="profile-page-wrapper">
+    <div class="profile-header-insta">
+        <div class="profile-avatar-insta">
+            {% if user_to_view.image %}
+            <img src="{{ url_for('static', filename='profile_pics/' + user_to_view.image) }}" alt="Аватар">
+            {% else %}
+            <i class="fas fa-user-circle"></i>
+            {% endif %}
+        </div>
+        <div class="profile-info-insta">
+            <div class="info-top-row">
+                <h2 class="username-insta">{{ user_to_view.login }}</h2>
+            </div>
+            <div class="stats-insta">
+                <div class="stat-item-insta"><strong>{{ reviews|length }}</strong> отзывов</div>
+                <a href="#" class="stat-item-insta" data-modal="followers-modal"><strong>{{ follower_count }}</strong>
+                    подписчиков</a>
+                <a href="#" class="stat-item-insta" data-modal="following-modal"><strong>{{ following_count }}</strong>
+                    подписок</a>
+            </div>
+            <div class="fullname-insta">{{ user_to_view.fullname }}</div>
+        </div>
+    </div>
+
+    <div class="plate" style="margin-top: 30px;">
+        <h3 style="text-align: center; margin-top: 0;">Основная информация</h3>
+        <form id="profile-form" action="{{ url_for('profile') }}" method="post" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="fullname">Полное имя</label>
+                <input type="text" id="fullname" name="fullname" value="{{ user_to_view.fullname or '' }}">
+            </div>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" value="{{ user_to_view.email }}" required>
+            </div>
+            <div class="form-group">
+                <label for="profile_pic_input">Изменить фото профиля</label>
+                <input type="file" name="profile_pic" id="profile_pic_input">
+            </div>
+            <button type="submit" class="btn-submit">Сохранить основную информацию</button>
+        </form>
+    </div>
+
+    <div class="plate" style="margin-top: 30px;">
+        <h3 style="text-align: center; margin-top: 0;">Смена пароля</h3>
+        <form action="{{ url_for('change_password') }}" method="post">
+            <div class="form-group">
+                <label for="old_password">Старый пароль</label>
+                <input type="password" name="old_password" id="old_password" required>
+            </div>
+            <div class="form-group">
+                <label for="new_password">Новый пароль</label>
+                <input type="password" name="new_password" id="new_password" required>
+            </div>
+            <div class="form-group">
+                <label for="confirm_password">Подтвердите новый пароль</label>
+                <input type="password" name="confirm_password" id="confirm_password" required>
+            </div>
+            <button type="submit" class="btn-submit">Изменить пароль</button>
+        </form>
+    </div>
+</div>
+
+<div id="followers-modal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn">&times;</span>
+        <h4>Подписчики</h4>
+        <ul class="user-list-modal">
+            {% for follower in followers %}
+            <li>
+                <a href="{{ url_for('user_profile', username=follower.login) }}">
+                    {% if follower.image %}<img
+                        src="{{ url_for('static', filename='profile_pics/' + follower.image) }}">{% else %}<i
+                        class="fas fa-user-circle"></i>{% endif %}
+                    <span>{{ follower.login }}</span>
+                </a>
+            </li>
+            {% else %}
+            <li>Нет подписчиков.</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+<div id="following-modal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn">&times;</span>
+        <h4>Подписки</h4>
+        <ul class="user-list-modal">
+            {% for person in following %}
+            <li>
+                <a href="{{ url_for('user_profile', username=person.login) }}">
+                    {% if person.image %}<img src="{{ url_for('static', filename='profile_pics/' + person.image) }}">{%
+                    else %}<i class="fas fa-user-circle"></i>{% endif %}
+                    <span>{{ person.login }}</span>
+                </a>
+            </li>
+            {% else %}
+            <li>Нет подписок.</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+
+
+<script>
+    document.querySelectorAll('[data-modal]').forEach(trigger => {
+        trigger.addEventListener('click', e => {
+            e.preventDefault();
+            const modalId = trigger.getAttribute('data-modal');
+            document.getElementById(modalId).style.display = 'flex';
+        });
+    });
+    document.querySelectorAll('.modal .close-btn').forEach(closeBtn => {
+        closeBtn.addEventListener('click', () => {
+            closeBtn.closest('.modal').style.display = 'none';
+        });
+    });
+    window.addEventListener('click', e => {
+        if (e.target.classList.contains('modal')) {
+            e.target.style.display = 'none';
+        }
+    });
+</script>
+{% endblock %}

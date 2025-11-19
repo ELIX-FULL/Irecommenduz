@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}IRecommend клон{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/basicLightbox/5.0.4/basicLightbox.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<header class="site-header">
+    <div class="container">
+        <div class="header-content">
+            <a href="{{ url_for('index') }}" class="logo">
+                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="IRecommend Logo">
+            </a>
+
+            <div class="header-main-controls">
+                {% if show_nav is not defined or show_nav %}
+                <form class="search-form" action="{{ url_for('search') }}" method="GET">
+                    <label for="search-input" class="search-icon"><i class="fas fa-search"></i></label>
+                    <input type="text" id="search-input" name="q" placeholder="Поиск..." autocomplete="off">
+                    <button type="submit">Найти</button>
+                    <div id="autocomplete-results"></div>
+                </form>
+                {% endif %}
+            </div>
+
+            <div class="user-actions">
+                {% if g.user %}
+                <a href="{{ url_for('profile') }}" class="user-profile-link">
+                    {% if g.user.image %}
+                    <img src="{{ url_for('static', filename='profile_pics/' + g.user.image) }}" class="header-avatar"
+                         alt="Avatar">
+                    {% else %}
+                    <i class="fas fa-user-circle"></i>
+                    {% endif %}
+                    <span>{{ g.user.login }}</span>
+                </a>
+                <a href="{{ url_for('add_review') }}" class="accent">Добавить отзыв</a>
+                <form action="{{ url_for('logout') }}" method="get">
+                    <button type="submit">Выйти</button>
+                </form>
+                {% else %}
+                <a href="{{ url_for('login') }}">Войти</a>
+                <a href="{{ url_for('register') }}" class="accent">Регистрация</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</header>
+
+{% if show_nav is not defined or show_nav %}
+<nav class="navbar">
+    <div class="container">
+        <div class="navbar-nav">
+            {% for category in categories[:9] %}
+            <a href="{{ url_for('reviews_by_category', category_id=category.category_id) }}">{{ category.category_name
+                }}</a>
+            {% endfor %}
+            <a href="{{ url_for('all_categories') }}" class="nav-link-more">Другие</a>
+        </div>
+    </div>
+</nav>
+{% endif %}
+
+<main class="container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <ul class="flash-messages">
+        {% for category, message in messages %}
+        <li class="flash-{{ category }}">{{ message }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/basicLightbox/5.0.4/basicLightbox.min.js"></script>
+
+<script>
+    function debounce(func, delay) {
+        let timeout;
+        return function (...args) {
+            const context = this;
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(context, args), delay);
+        };
+    }
+
+    const searchInput = document.getElementById('search-input');
+    const resultsContainer = document.getElementById('autocomplete-results');
+
+    const fetchSuggestions = async (query) => {
+        if (query.length < 2) {
+            resultsContainer.innerHTML = '';
+            resultsContainer.style.display = 'none';
+            return;
+        }
+        const response = await fetch(`/search/autocomplete?q=${query}`);
+        const suggestions = await response.json();
+        resultsContainer.innerHTML = '';
+        if (suggestions.length > 0) {
+            suggestions.forEach(item => {
+                const div = document.createElement('a');
+                div.href = item.url;
+                div.textContent = item.name;
+                resultsContainer.appendChild(div);
+            });
+            resultsContainer.style.display = 'block';
+        } else {
+            resultsContainer.style.display = 'none';
+        }
+    };
+
+    if (searchInput) {
+        searchInput.addEventListener('input', debounce(e => {
+            fetchSuggestions(e.target.value);
+        }, 300));
+    }
+
+    document.addEventListener('click', function (e) {
+        if (searchInput && !searchInput.contains(e.target)) {
+            resultsContainer.style.display = 'none';
+        }
+    });
+</script>
+</body>
+</html>

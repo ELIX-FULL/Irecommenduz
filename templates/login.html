@@ -1,0 +1,40 @@
+{% extends 'auth_base.html' %}
+
+{% block title %}Войти{% endblock %}
+
+{% block content %}
+<div class="plate login-plate">
+    <h1 class="page-title">Войти</h1>
+
+    <div class="social-login">
+        <h3>через сервис</h3>
+        <div class="social-icons">
+            <a href="{{ url_for('google_login') }}" class="social-icon google" title="Войти через Google">
+                <img src="../static/images/google.png" alt="Google">
+            </a>
+            <a href="{{ url_for('yandex_login') }}" class="social-icon yandex" title="Войти через Яндекс">
+                <img src="../static/images/yandex.png" alt="Yandex">
+            </a>
+        </div>
+    </div>
+
+    <div class="manual-login">
+        <h3>или используйте ваш логин и пароль</h3>
+        <form action="{{ url_for('login') }}" method="post">
+            <div class="form-group">
+                <label for="login">Имя пользователя или email:</label>
+                <input type="text" id="login" name="login" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Пароль:</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <button type="submit" class="btn-submit" style="width: 100%;">Войти</button>
+        </form>
+        <div class="login-links">
+            <a href="{{ url_for('forgot_password') }}">Забыли пароль или имя пользователя?</a>
+            <a href="{{ url_for('register') }}">Нет аккаунта?</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

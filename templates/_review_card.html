@@ -1,0 +1,66 @@
+{% macro render_review_card(review, user_votes, show_author=True) %}
+<div class="review-card-final-v2">
+    {% if show_author %}
+    <div class="review-v2-author-header">
+        <a href="{{ url_for('user_profile', username=review.user.login) }}" class="author-avatar">
+            {% if review.user.image %}<img src="{{ url_for('static', filename='profile_pics/' + review.user.image) }}"
+                                           alt="аватар">{% else %}<i class="fas fa-user-circle"></i>{% endif %}
+        </a>
+        <div class="author-meta">
+            <a href="{{ url_for('user_profile', username=review.user.login) }}" class="author-name">{{ review.user.login
+                }}</a>
+        </div>
+    </div>
+    <hr class="card-divider">
+    {% endif %}
+
+    <div class="review-title-line">
+        <h2 class="review-object-name"><a href="{{ url_for('review_detail', review_id=review.review_id) }}">{{
+            review.name }}</a></h2>
+        <span class="review-category-tag">{{ review.category.category_name }}</span>
+    </div>
+
+    <div class="review-rating-stars">
+        {% for i in range(review.rating) %}<i class="fas fa-star filled"></i>{% endfor %}{% for i in range(5 -
+        review.rating) %}<i class="fas fa-star"></i>{% endfor %}
+    </div>
+
+    <p class="review-content-short">{{ review.description|truncate(200, true, '...') }}</p>
+
+    {% if review.description|length > 200 %}
+    <a href="{{ url_for('review_detail', review_id=review.review_id) }}" class="read-more-btn">Читать дальше</a>
+    {% endif %}
+
+    <div class="review-actions">
+        <div class="vote-buttons">
+            <button class="vote-btn like-btn {% if review.review_id in user_votes and user_votes[review.review_id] == 1 %}active{% endif %}"
+                    data-review-id="{{ review.review_id }}" data-vote-type="1">
+                <i class="fas fa-thumbs-up"></i> <span id="likes-count-{{ review.review_id }}">{{ review.likes }}</span>
+            </button>
+            <button class="vote-btn dislike-btn {% if review.review_id in user_votes and user_votes[review.review_id] == -1 %}active{% endif %}"
+                    data-review-id="{{ review.review_id }}" data-vote-type="-1">
+                <i class="fas fa-thumbs-down"></i> <span id="dislikes-count-{{ review.review_id }}">{{ review.dislikes }}</span>
+            </button>
+        </div>
+
+        {% if g.user and g.user.user_id == review.user_id %}
+        <form class="delete-form" action="{{ url_for('delete_review', review_id=review.review_id) }}" method="post">
+            <button type="submit" class="delete-btn js-delete-btn">
+                <i class="fas fa-trash-alt"></i>
+            </button>
+        </form>
+        {% endif %}
+    </div>
+
+    {% if review.images %}
+    <div class="review-gallery-preview">
+        {% for image in review.images[:4] %}
+        <a href="{{ url_for('static', filename='review_pics/' + image.image_path) }}"
+           class="gallery-thumb gallery-item">
+            <img src="{{ url_for('static', filename='review_pics/' + image.image_path) }}" alt="фото">
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endmacro %}

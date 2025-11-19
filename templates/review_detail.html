@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ review.name }} - Отзыв от {{ review.user.login }}{% endblock %}
+
+{% block content %}
+<div class="review-detail-page">
+    <div class="plate product-info-header-v2">
+
+        <div class="product-details">
+            <h1>{{ review.name }}</h1>
+            <div class="product-rating-info">
+                <div class="review-rating-stars">
+                    {% for i in range(review.rating) %}<i class="fas fa-star filled"></i>{% endfor %}{% for i in range(5
+                    - review.rating) %}<i class="fas fa-star"></i>{% endfor %}
+                </div>
+                <span>Среднее: {{ review.rating }}.0 ({{ review.likes + review.dislikes }} голосов)</span>
+            </div>
+            <ul class="product-meta-list">
+                <li><strong>Категория:</strong> {{ review.category.category_name }}</li>
+                <li><strong>Просмотры:</strong> <span
+                        id="view-count-{{ review.review_id }}">{{ review.view_count }}</span></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="plate review-full-content">
+        <div class="author-info" style="margin-bottom: 20px;">
+            <a href="{{ url_for('user_profile', username=review.user.login) }}" class="author-avatar">
+                {% if review.user.image %}<img
+                    src="{{ url_for('static', filename='profile_pics/' + review.user.image) }}" alt="аватар">{% else
+                %}<i class="fas fa-user-circle"></i>{% endif %}
+            </a>
+            <div class="author-meta">
+                <a href="{{ url_for('user_profile', username=review.user.login) }}" class="author-name">{{
+                    review.user.login }}</a>
+                <span class="review-date">Опубликовано {{ review.created_at.strftime('%d %B %Y') }}</span>
+            </div>
+        </div>
+
+        <div class="review-full-text">
+            {{ review.description|safe }}
+        </div>
+
+        {% if review.images %}
+        <div class="full-review-gallery">
+            {% for image in review.images %}
+            <a href="{{ url_for('static', filename='review_pics/' + image.image_path) }}" class="gallery-item">
+                <img src="{{ url_for('static', filename='review_pics/' + image.image_path) }}" alt="фото к отзыву">
+            </a>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="review-actions" style="justify-content: flex-end; margin-top: 30px;">
+            <div class="vote-buttons">
+                <button class="vote-btn like-btn {% if review.review_id in user_votes and user_votes[review.review_id] == 1 %}active{% endif %}"
+                        data-review-id="{{ review.review_id }}" data-vote-type="1">
+                    <i class="fas fa-thumbs-up"></i> <span
+                        id="likes-count-{{ review.review_id }}">{{ review.likes }}</span>
+                </button>
+                <button class="vote-btn dislike-btn {% if review.review_id in user_votes and user_votes[review.review_id] == -1 %}active{% endif %}"
+                        data-review-id="{{ review.review_id }}" data-vote-type="-1">
+                    <i class="fas fa-thumbs-down"></i> <span id="dislikes-count-{{ review.review_id }}">{{ review.dislikes }}</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('click', async function (e) {
+        const galleryItem = e.target.closest('.gallery-item');
+        if (galleryItem) {
+            e.preventDefault();
+            const imagePath = galleryItem.getAttribute('href');
+            basicLightbox.create(`<img src="${imagePath}">`).show();
+            return;
+        }
+
+        const voteBtn = e.target.closest('.vote-btn');
+        if (voteBtn) {
+            e.preventDefault();
+            try {
+                const response = await fetch(`/review/${voteBtn.dataset.reviewId}/vote`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({vote_type: parseInt(voteBtn.dataset.voteType)})
+                });
+                if (response.status === 401) {
+                    window.location.href = "{{ url_for('login') }}";
+                    return;
+                }
+                if (!response.ok) throw new Error('Server error');
+                window.location.reload();
+            } catch (error) {
+                console.error("Ошибка голосования:", error);
+            }
+            return;
+        }
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const data = document.getElementById('review-data');
+        const isUserLoggedIn = data.dataset.logged === "True";
+        const reviewId = data.dataset.reviewId;
+
+        if (isUserLoggedIn) {
+            setTimeout(() => {
+                fetch(`/review/${reviewId}/view`, {method: 'POST'})
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            console.log('Просмотр успешно засчитан.');
+                            const viewCountElement = document.getElementById(`view-count-${reviewId}`);
+                            if (viewCountElement) {
+                                viewCountElement.textContent = data.new_view_count;
+                            }
+                        } else {
+                            console.log('Просмотр уже был засчитан ранее.');
+                        }
+
+                    })
+                    .catch(err => console.error(err));
+            }, 10000);
+        }
+    });
+5
+    document.querySelectorAll('.js-delete-btn').forEach(button => {
+        button.addEventListener('click', function (e) {
+            e.preventDefault();
+            const form = this.closest('form');
+
+            basicLightbox.create(`
+                <div class="modal-confirm">
+                    <h2>Подтвердите действие</h2>
+                    <p>Вы уверены, что хотите удалить этот отзыв? Это действие необратимо.</p>
+                    <div class="modal-buttons">
+                        <button class="modal-btn cancel">Отмена</button>
+                        <button class="modal-btn confirm">Удалить</button>
+                    </div>
+                </div>
+            `, {
+                onShow: (instance) => {
+                    instance.element().querySelector('.cancel').onclick = instance.close;
+                    instance.element().querySelector('.confirm').onclick = () => {
+                        form.submit();
+                    };
+                }
+            }).show();
+        });
+    });
+</script>
+
+{% endblock %}

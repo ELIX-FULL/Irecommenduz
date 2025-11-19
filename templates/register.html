@@ -1,0 +1,39 @@
+{% extends 'auth_base.html' %}
+
+{% block title %}Регистрация{% endblock %}
+
+{% block content %}
+<div class="plate login-plate">
+    <h1 class="page-title">Регистрация</h1>
+    <div class="social-login">
+        <h3>через сервис или вручную</h3>
+        <div class="social-icons">
+            <a href="{{ url_for('google_login') }}" class="social-icon google" title="Войти через Google">
+                <img src="../static/images/google.png" alt="Google">
+            </a>
+            <a href="{{ url_for('yandex_login') }}" class="social-icon yandex" title="Войти через Яндекс">
+                <img src="../static/images/yandex.png" alt="Yandex">
+            </a>
+        </div>
+    </div>
+
+    <form action="{{ url_for('register') }}" method="post">
+        <div class="form-group">
+            <label for="login">Логин:</label>
+            <input type="text" id="login" name="login" required>
+        </div>
+        <div class="form-group">
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" required>
+        </div>
+        <div class="form-group">
+            <label for="password">Пароль:</label>
+            <input type="password" id="password" name="password" required>
+        </div>
+        <button type="submit" class="btn-submit" style="width: 100%;">Зарегистрироваться</button>
+    </form>
+    <div class="login-links" style="justify-content: center; margin-top: 20px;">
+        <a href="{{ url_for('login') }}">Уже есть аккаунт? Войти</a>
+    </div>
+</div>
+{% endblock %}

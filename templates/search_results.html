@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block title %}Результаты поиска: {{ query }}{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="main-content">
+        <h1 class="page-title" style="text-align: left; margin: 0 0 20px 0;">
+            Результаты поиска по запросу: "{{ query|e }}"
+        </h1>
+
+        <div class="reviews-list">
+            {% for review in reviews %}
+            <div class="review-card-redesigned">
+                <div class="review-header">
+                    {% set review_images = review.images %}
+                    {% if review_images %}
+                    <a href="{{ url_for('review_detail', review_id=review.review_id) }}" class="review-main-image">
+                        <img src="{{ url_for('static', filename='review_pics/' + review_images[0].image_path) }}"
+                             alt="главное фото">
+                    </a>
+                    {% endif %}
+                    <div class="review-details">
+                        <div class="author-info">
+                            <a href="#" class="author-avatar">
+                                {% if review.user.image %}
+                                <img src="{{ url_for('static', filename='profile_pics/' + review.user.image) }}"
+                                     alt="аватар">
+                                {% else %}
+                                <i class="fas fa-user-circle"></i>
+                                {% endif %}
+                            </a>
+                            <div class="author-meta">
+                                <a href="#" class="author-name">{{ review.user.login }}</a>
+                                <div class="review-rating-stars">
+                                    {% for i in range(review.rating) %}<i class="fas fa-star filled"></i>{% endfor %}{%
+                                    for i in range(5 - review.rating) %}<i class="fas fa-star"></i>{% endfor %}
+                                </div>
+                                <span class="review-date">{{ review.created_at.strftime('%d.%m.%Y - %H:%M') }}</span>
+                            </div>
+                        </div>
+                        <h2 class="review-object-name"><a
+                                href="{{ url_for('review_detail', review_id=review.review_id) }}">{{ review.name }}</a>
+                        </h2>
+                    </div>
+                </div>
+
+                {% if review_images and review_images|length > 1 %}
+                <div class="review-gallery-preview">
+                    {% for image in review_images[1:] %}
+                    {% if loop.index <= 3 %}
+                    <a href="{{ url_for('static', filename='review_pics/' + image.image_path) }}"
+                       class="gallery-thumb gallery-item">
+                        <img src="{{ url_for('static', filename='review_pics/' + image.image_path) }}" alt="фото">
+                    </a>
+                    {% endif %}
+                    {% if loop.last and loop.index > 3 %}
+                    <a href="{{ url_for('static', filename='review_pics/' + review_images[4].image_path) }}"
+                       class="gallery-thumb thumb-overlay gallery-item">
+                        <span>+{{ loop.index - 3 }} фото</span>
+                    </a>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <h3 class="review-title"><a href="{{ url_for('review_detail', review_id=review.review_id) }}">{{
+                    review.name }}</a></h3>
+                <div class="review-content-short">
+                    {{ review.description|truncate(300, true) }}
+                </div>
+                <a href="{{ url_for('review_detail', review_id=review.review_id) }}" class="read-more-btn">Читать весь
+                    отзыв</a>
+            </div>
+            {% else %}
+            <div class="plate">
+                <p>По вашему запросу ничего не найдено. Попробуйте изменить поисковую фразу.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <aside class="sidebar">
+    </aside>
+</div>
+
+<script>
+    document.addEventListener('click', function (e) {
+        if (e.target.closest('.gallery-item')) {
+            e.preventDefault();
+            const imagePath = e.target.closest('.gallery-item').getAttribute('href');
+            basicLightbox.create(`<img src="${imagePath}">`).show();
+        }
+    });
+</script>
+{% endblock %}
